@@ -3,22 +3,24 @@
 const REPO = 'Zeno-Sati/juezhi-download';
 const ASSET = 'juezhi.apk';
 
+// No GitHub API (it limits lookups from shared servers): the public "latest" link redirects to
+// /releases/download/<tag>/juezhi.apk, which names the version; one HEAD on that file gives its size.
 async function latestRelease(ctx) {
   const cache = caches.default;
-  const key = new Request('https://cache.internal/juezhi-latest-release');
+  const key = new Request('https://cache.internal/juezhi-latest-release-v2');
   const hit = await cache.match(key);
   if (hit) return hit.json();
-  const response = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
-    headers: {'User-Agent': 'juezhi-download-page', Accept: 'application/vnd.github+json'},
-  });
-  if (!response.ok) throw new Error(`GitHub ${response.status}`);
-  const release = await response.json();
-  const asset = (release.assets || []).find((item) => item.name === ASSET);
+  const hop = await fetch(`https://github.com/${REPO}/releases/latest/download/${ASSET}`, {redirect: 'manual'});
+  const location = hop.headers.get('Location') || '';
+  const match = location.match(/\/releases\/download\/([^/]+)\//);
+  if (!match) throw new Error(`GitHub ${hop.status}`);
+  const url = new URL(location, 'https://github.com').toString();
+  const head = await fetch(url, {method: 'HEAD'});
   const info = {
-    version: String(release.tag_name || '').replace(/^v/, ''),
-    date: release.published_at || '',
-    size: asset ? asset.size : 0,
-    url: asset ? asset.browser_download_url : '',
+    version: decodeURIComponent(match[1]).replace(/^v/, ''),
+    date: head.headers.get('Last-Modified') ? new Date(head.headers.get('Last-Modified')).toISOString() : '',
+    size: Number(head.headers.get('Content-Length') || 0),
+    url,
   };
   ctx.waitUntil(cache.put(key, new Response(JSON.stringify(info), {headers: {'Cache-Control': 'max-age=300'}})));
   return info;
