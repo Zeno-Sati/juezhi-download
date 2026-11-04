@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>觉知 App 下载</title>
+<meta name="description" content="觉知 App · 在每一个当下，照见自己。Android 安装包下载与安装说明。">
+<link rel="icon" href="logo.png">
+<style>
+  :root {
+    --bg: #fbf4ea;
+    --card: #fffaf3;
+    --ink: #3b2a1e;
+    --muted: #7a6656;
+    --accent: #c8641e;
+    --accent-ink: #ffffff;
+    --line: #ecdcc8;
+    --tip: #fff1dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 48px; }
+  .wechat {
+    display: none;
+    position: sticky; top: 0; z-index: 10;
+    background: var(--accent); color: var(--accent-ink);
+    padding: 14px 64px 14px 16px; font-size: 17px; line-height: 1.5;
+  }
+  .wechat b { font-size: 19px; }
+  .wechat::after {
+    content: "↗"; position: absolute; right: 18px; top: 6px; font-size: 40px; line-height: 1;
+  }
+  body.in-wechat .wechat { display: block; }
+  header { text-align: center; padding: 16px 0 8px; }
+  header img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 6px 18px rgba(120, 70, 20, .18); }
+  h1 { margin: 14px 0 4px; font-size: 28px; letter-spacing: 2px; }
+  .slogan { margin: 0; color: var(--muted); }
+  .download {
+    margin: 24px 0 8px; padding: 20px 16px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 16px; text-align: center;
+  }
+  .btn {
+    display: block; width: 100%; padding: 16px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font-size: 20px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+  }
+  .btn:active { transform: scale(.98); }
+  .meta { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+  .note { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+  body.in-wechat .note-wechat { color: var(--accent); font-weight: 600; }
+  h2 { font-size: 20px; margin: 32px 0 12px; }
+  .guide { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); display: block; }
+  .tips { background: var(--tip); border-radius: 12px; padding: 12px 16px; font-size: 15px; }
+  .tips p { margin: 4px 0; }
+  footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wechat"><b>请点右上角「···」</b><br>选「在浏览器打开」，才能下载</div>
+<main>
+  <header>
+    <img src="logo.png" alt="觉知" width="96" height="96">
+    <h1>觉知 App</h1>
+    <p class="slogan">在每一个当下，照见自己</p>
+  </header>
+
+  <section class="download">
+    <a class="btn" id="download" href="/juezhi.apk" download="juezhi.apk">下载觉知（安卓）</a>
+    <p class="meta" id="meta">安卓手机可用</p>
+    <p class="note note-wechat" id="note">下载好后打开安装包，按下面的说明一步步装</p>
+  </section>
+
+  <section class="tips">
+    <p>已经装过觉知的，直接覆盖安装，记录都会保留。</p>
+    <p>出现「风险」「未经安全审核」等提示是正常的，放心安装。</p>
+    <p>目前只有安卓版，苹果手机暂时不能用。</p>
+  </section>
+
+  <h2>安装说明</h2>
+  <img class="guide" src="install-guide.jpg" alt="觉知 App 安装说明：长按文件 → 其他应用中打开 → APK 安装器 → 安装 → 了解更多 → 知道了 → 勾选并继续安装 → 允许本次安装 → 完成" loading="lazy" width="724" height="2172">
+
+  <footer>觉知 App</footer>
+</main>
+<script>
+  const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
+  if (inWeChat) {
+    document.body.classList.add('in-wechat');
+    document.getElementById('note').textContent = '微信里下载不了：先点右上角「···」，选「在浏览器打开」';
+    document.getElementById('download').addEventListener('click', (event) => {
+      event.preventDefault();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+  }
+  fetch('/info.json').then((r) => r.ok ? r.json() : null).then((info) => {
+    if (!info || !info.version) return;
+    const mb = info.size ? ` · ${Math.round(info.size / 1048576)} MB` : '';
+    const date = info.date ? ` · ${info.date.slice(0, 10).replace(/-/g, '.')} 更新` : '';
+    document.getElementById('meta').textContent = `最新版本 ${info.version}${mb}${date}`;
+  }).catch(() => {});
+</script>
+</body>
+</html>
